@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify, request
+import os
 import json
 
 app = Flask(__name__)
@@ -16,4 +17,5 @@ def mock_route():
     return jsonify({ "location": "Not available" })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, port=port)
