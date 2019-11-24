@@ -3,14 +3,16 @@ import requests
 import os
 import json
 
+# Statics
 app = Flask(__name__)
+API_KEY = "68590775e423441297d3af35eaaefc1f"
 
 # Helper functions
 def get_null_parameter():
     return jsonify({ "error": "parameters cannot be null" }), 400
 
 def get_location_name(latitude, longitude):
-    req = requests.get("https://api.opencagedata.com/geocode/v1/json?key=68590775e423441297d3af35eaaefc1f&q=" + latitude  + "%2C" + longitude)
+    req = requests.get("https://api.opencagedata.com/geocode/v1/json?key=" + API_KEY + "&q=" + latitude  + "%2C" + longitude)
     resp = req.json()
 
     return jsonify({ "country": resp["results"][0]["components"]["country"]})
