@@ -36,6 +36,15 @@ def get_ads():
         return get_null_parameter()
     return jsonify({ "results": ["ad_1", "ad_2"] })
 
+@app.route("/add_ads", methods=['PUT'])
+def add_ads():
+    country = request.args.get("country", default = None)
+    content = request.args.get("content", default = None)
+    
+    if country is None or content is None:
+        return get_null_parameter()
+    return ('', 200)
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
