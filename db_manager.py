@@ -105,11 +105,3 @@ class DatabaseManager:
             return json.dumps({'status': 'Success', 'id': result['agency_id']})
             
  
-    
-db=DatabaseManager()
-##db.get_screens_list()
-##db.get_screens(1)
-db.update_agency('Franco Fancon poika Franco','SPA','123')
-##print(db.get_agency('Benis :DD', '12', 1))
-db.make_order(3,1,2.0,2,3,2)
-db.get_city_list()
