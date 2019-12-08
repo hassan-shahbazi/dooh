@@ -1,0 +1,28 @@
+[
+    {
+        "host": "localhost",
+        "user": "luumu",
+        "password": "123",
+        "db": "diss1",
+        "location": "FI",
+        "id": 1
+    },
+    {
+        "host": "localhost",
+        "user": "luumu",
+        "password": "123",
+        "db": "diss2",
+        "location": "FRA",
+        "id": 2
+        
+    },
+    {
+        "host": "localhost",
+        "user": "luumu",
+        "password": "123",
+        "db": "diss3",
+        "location": "SPA",
+        "id": 3
+        
+    }
+]
