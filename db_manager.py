@@ -40,43 +40,39 @@ class DatabaseManager:
 
     def get_screens(self, city_id): ## screens by city
         sql = "SELECT * FROM screen WHERE city_id=%s"
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+        with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql, (city_id))
             return json.dumps(cursor.fetchall())
 
-    def update_payment(self, city_id, amount, status):
+    def update_payment(self, country, amount, status): ## this is useless
         sql_insert = "INSERT INTO payment (amount, status) VALUES (%s, %s)"
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+        with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql_insert, (amount, 'paid'))
             payment_id = cursor.lastrowid
             return payment_id 
 
-    def update_screenorder(self, city_id, screen_id, order_id):
+    def update_screenorder(self, country, screen_id, order_id):
         sql_insert3 = "INSERT INTO screenorder (screen_id, order_id) VALUES (%s, %s)"
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+        with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql_insert3,(screen_id, order_id))
             
 
-    def update_order(self, city_id, duration, number_of_repeat, payment_id,agency_id):
-        sql_insert2 = "INSERT INTO orders(duration, number_of_repeat, payment_id, agency_id) VALUES (%s,%s,%s,%s)"
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
-            cursor.execute(sql_insert2,(duration, number_of_repeat, payment_id, agency_id))
+    def update_order(self, country, duration, number_of_repeat, amount,agency_id, screen_type, city_id):
+        sql_insert2 = "INSERT INTO orders(duration, number_of_repeat, amount, agency_id, screen_type, city_id) VALUES (%s,%s,%s,%s,%s,%s)"
+        with self.connection_by_country[country].cursor() as cursor:
+            cursor.execute(sql_insert2,(duration, number_of_repeat, amount, agency_id, screen_type, city_id))
             order_id = cursor.lastrowid
-            return order_id
+            return order_id ## must return this to insert into screenorders (foreign key constraint)
 
-    def make_order(self, screen_id, agency_id, duration, number_of_repeat, amount, city_id):
-        ## orders, payments, screenorders to current db
-        payment_id = self.update_payment(city_id, amount, 'paid')
-        print(payment_id)
-        order_id = self.update_order(city_id, duration, number_of_repeat, payment_id, agency_id)
-        print(order_id)
-        self.update_screenorder(city_id, screen_id, order_id)
+    def make_order(self, screen_id, agency_id, duration, number_of_repeat, amount, country, screen_type, city_id):
+        ##Order and screenorder to current db
+        order_id = self.update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
+        self.update_screenorder(country, screen_id, order_id)
 
-        ## Orders and payments to finland. The finnish db should have id of 1 (should probably make it so this reads the id from the config.json)
-        payment_id =  self.update_payment(1, amount, 'paid')
-        order_id =  self.update_order(1, duration, number_of_repeat, payment_id, agency_id)
+        ## Orders to finland. The finnish db should have id of 1 
+        order_id =  self.update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
         
-    def get_screens_list(self): ## all screens 
+    def get_screens_list(self): ## all screens from all databases
         sql = "SELECT * FROM screen"
         result = []
         for conn in self.connections:
@@ -88,10 +84,29 @@ class DatabaseManager:
         return json.dumps(result)
         
         
-    def get_city_list(self):## all screens
+    def get_city_list(self):## all cities
         sql = "SELECT `city_id`, `name`, `country` FROM `city`"
         print(self.get_all(sql))
-        
+    
+    def get_orders_by_agency(self, agency_id, city_id):
+        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+            sql = "SELECT * FROM orders WHERE agency_id = %s"
+            cursor.execute(sql, (agency_id))
+            result = cursor.fetchall()
+            if not result:
+                return json.dumps({'status': 'No orders'})
+            if result:
+                return json.dumps(result)
+
+    def get_orders_by_agency_country(self, agency_id, country):
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT * FROM orders WHERE agency_id = %s"
+            cursor.execute(sql, (agency_id))
+            result = cursor.fetchall()
+            if not result:
+                return json.dumps({'status': 'No orders'})
+            if result:
+                return json.dumps(result)
             
     def get_agency(self, agency_name, password, city_id): #essentially a login
         with self.connection_by_city_id[int(city_id)].cursor() as cursor:
@@ -103,5 +118,24 @@ class DatabaseManager:
             if result['psw'] != password:
                 return json.dumps({'status': 'Incorrect password'})
             return json.dumps({'status': 'Success', 'id': result['agency_id']})
-            
- 
+    
+    def get_screens_by_type(self, country, type): 
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT* FROM screen WHERE type = %s"
+            cursor.execute(sql, (type))
+            result = cursor.fetchall()
+            if not result:
+                return json.dumps({'status': 'No screens of that type'})  
+            if result:
+                return json.dumps(result)    
+
+    def get_screens_by_country(self, country):
+         with self.connection_by_country[country].cursor() as cursor:
+             sql = "SElECT * FROM screen"
+             cursor.execute(sql)
+             result = cursor.fetchall()
+             if not result:
+                 return json.dumps({'status': 'No screens'})  
+             if result:
+                 return json.dumps(result)
+
