@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `diss1`.`agency` (
   `psw` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`agency_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 3
+AUTO_INCREMENT = 5
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -41,20 +41,7 @@ CREATE TABLE IF NOT EXISTS `diss1`.`city` (
   `country` ENUM('FI', 'FRA', 'SPA') NOT NULL,
   PRIMARY KEY (`city_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 3
-DEFAULT CHARACTER SET = latin1;
-
-
--- -----------------------------------------------------
--- Table `diss1`.`payment`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `diss1`.`payment` (
-  `payment_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `amount` DOUBLE NOT NULL,
-  `status` ENUM('paid', 'not_paid') NOT NULL,
-  PRIMARY KEY (`payment_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -65,21 +52,18 @@ CREATE TABLE IF NOT EXISTS `diss1`.`orders` (
   `order_id` INT(11) NOT NULL AUTO_INCREMENT,
   `duration` DOUBLE NOT NULL,
   `number_of_repeat` INT(11) NOT NULL,
+  `city_id` INT(11) NOT NULL,
+  `screen_type` ENUM('billboard', 'standing', 'small') NOT NULL,
+  `amount` DOUBLE NOT NULL,
   `agency_id` INT(11) NOT NULL,
-  `payment_id` INT(11) NOT NULL,
   PRIMARY KEY (`order_id`),
   INDEX `agency_idx` (`agency_id` ASC),
-  INDEX `payment_idx` (`payment_id` ASC),
   CONSTRAINT `agency`
     FOREIGN KEY (`agency_id`)
     REFERENCES `diss1`.`agency` (`agency_id`)
-    ON UPDATE CASCADE,
-  CONSTRAINT `payment`
-    FOREIGN KEY (`payment_id`)
-    REFERENCES `diss1`.`payment` (`payment_id`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 11
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -88,7 +72,7 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `diss1`.`screen` (
   `screen_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `type` ENUM('touch', 'normal') NOT NULL,
+  `type` ENUM('billboard', 'standing', 'small') NOT NULL,
   `city_id` INT(11) NOT NULL,
   `price` DOUBLE NOT NULL,
   PRIMARY KEY (`screen_id`),
@@ -98,7 +82,7 @@ CREATE TABLE IF NOT EXISTS `diss1`.`screen` (
     REFERENCES `diss1`.`city` (`city_id`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 4
+AUTO_INCREMENT = 6
 DEFAULT CHARACTER SET = latin1;
 
 

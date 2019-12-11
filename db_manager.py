@@ -8,7 +8,6 @@ class DatabaseManager:
         
         self.connections = []
         self.connection_by_country = {}
-        self.connection_by_city_id = {}
         
         for connection_config in self.config:
             connection = pymysql.connect(host=connection_config['host'],
@@ -21,7 +20,6 @@ class DatabaseManager:
             self.connections.append(connection)
             
             self.connection_by_country[connection_config['location']] = connection
-            self.connection_by_city_id[connection_config['id']] = connection
 
     def update_all(self, sql, *args): ## update to all db's
         for connection in self.connections:
@@ -37,13 +35,7 @@ class DatabaseManager:
     def update_agency(self, agency_name, location, psw):## register
         sql = "INSERT INTO agency(agency_name, location, psw) VALUES (%s, %s, %s)"
         self.update_all(sql, agency_name, location, psw) ### update all, since it's fully replicated
-
-    def get_screens(self, city_id): ## screens by city
-        sql = "SELECT * FROM screen WHERE city_id=%s"
-        with self.connection_by_country[country].cursor() as cursor:
-            cursor.execute(sql, (city_id))
-            return json.dumps(cursor.fetchall())
-
+        
     def update_payment(self, country, amount, status): ## this is useless
         sql_insert = "INSERT INTO payment (amount, status) VALUES (%s, %s)"
         with self.connection_by_country[country].cursor() as cursor:
@@ -87,16 +79,6 @@ class DatabaseManager:
     def get_city_list(self):## all cities
         sql = "SELECT `city_id`, `name`, `country` FROM `city`"
         print(self.get_all(sql))
-    
-    def get_orders_by_agency(self, agency_id, city_id):
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
-            sql = "SELECT * FROM orders WHERE agency_id = %s"
-            cursor.execute(sql, (agency_id))
-            result = cursor.fetchall()
-            if not result:
-                return json.dumps({'status': 'No orders'})
-            if result:
-                return json.dumps(result)
 
     def get_orders_by_agency_country(self, agency_id, country):
         with self.connection_by_country[country].cursor() as cursor:
@@ -108,8 +90,8 @@ class DatabaseManager:
             if result:
                 return json.dumps(result)
             
-    def get_agency(self, agency_name, password, city_id): #essentially a login
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+    def get_agency(self, agency_name, password, country): #essentially a login
+        with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM agency WHERE agency_name=%s"
             cursor.execute(sql, (agency_name))
             result = cursor.fetchone()
@@ -139,3 +121,5 @@ class DatabaseManager:
              if result:
                  return json.dumps(result)
 
+db = DatabaseManager()
+print(db.get_agency('Agency_1','123','FI'))
