@@ -23,55 +23,58 @@ class DatabaseManager:
             self.connection_by_country[connection_config['location']] = connection
             self.connection_by_city_id[connection_config['id']] = connection
 
-    def update_all(self, sql, *args): ## update to all db's
+## Private functions
+    def __update_all(self, sql, *args): ## update to all db's
         for connection in self.connections:
             with connection.cursor() as cursor:
                 cursor.execute(sql, tuple(args))
 
-    def get_all(self, sql): ## gets from all db's
+    def __get_all(self, sql): ## gets from all db's
         for connection in self.connections:
             with connection.cursor() as cursor:
                 cursor.execute(sql)
                 return json.dumps(cursor.fetchall())
 
-    def update_agency(self, agency_name, location, psw):## register
-        sql = "INSERT INTO agency(agency_name, location, psw) VALUES (%s, %s, %s)"
-        self.update_all(sql, agency_name, location, psw) ### update all, since it's fully replicated
-
-    def get_screens(self, city_id): ## screens by city
-        sql = "SELECT * FROM screen WHERE city_id=%s"
-        with self.connection_by_country[country].cursor() as cursor:
-            cursor.execute(sql, (city_id))
-            return json.dumps(cursor.fetchall())
-
-    def update_payment(self, country, amount, status): ## this is useless
-        sql_insert = "INSERT INTO payment (amount, status) VALUES (%s, %s)"
-        with self.connection_by_country[country].cursor() as cursor:
-            cursor.execute(sql_insert, (amount, 'paid'))
-            payment_id = cursor.lastrowid
-            return payment_id 
-
-    def update_screenorder(self, country, screen_id, order_id):
+    def __update_screenorder(self, country, screen_id, order_id):
         sql_insert3 = "INSERT INTO screenorder (screen_id, order_id) VALUES (%s, %s)"
         with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql_insert3,(screen_id, order_id))
-            
 
-    def update_order(self, country, duration, number_of_repeat, amount,agency_id, screen_type, city_id):
+    def __update_order(self, country, duration, number_of_repeat, amount,agency_id, screen_type, city_id):
         sql_insert2 = "INSERT INTO orders(duration, number_of_repeat, amount, agency_id, screen_type, city_id) VALUES (%s,%s,%s,%s,%s,%s)"
         with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql_insert2,(duration, number_of_repeat, amount, agency_id, screen_type, city_id))
             order_id = cursor.lastrowid
             return order_id ## must return this to insert into screenorders (foreign key constraint)
 
+## Public functions
+    # login
+    def get_agency(self, agency_name, password, city_id):
+        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+            sql = "SELECT * FROM agency WHERE agency_name=%s"
+            cursor.execute(sql, (agency_name))
+            result = cursor.fetchone()
+            if not result:
+                return ('', 404) # agency not found
+            if result['psw'] != password:
+                return ('', 401) # wrong password
+            return json.dumps({'id': result['agency_id']})
+
+    # register a new agency
+    def update_agency(self, agency_name, psw, location):
+        sql = "INSERT INTO agency(agency_name, location, psw) VALUES (%s, %s, %s)"
+        self.__update_all(sql, agency_name, location, psw) ### update all, since it's fully replicated
+
+    # make a new order
     def make_order(self, screen_id, agency_id, duration, number_of_repeat, amount, country, screen_type, city_id):
         ##Order and screenorder to current db
-        order_id = self.update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
-        self.update_screenorder(country, screen_id, order_id)
+        order_id = self.__update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
+        self.__update_screenorder(country, screen_id, order_id)
 
         ## Orders to finland. The finnish db should have id of 1 
-        order_id =  self.update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
-        
+        order_id = self.__update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
+
+    # get list of all screens
     def get_screens_list(self): ## all screens from all databases
         sql = "SELECT * FROM screen"
         result = []
@@ -79,63 +82,61 @@ class DatabaseManager:
             with conn.cursor() as cursor:
                 cursor.execute(sql)
                 result += cursor.fetchall()
-        
-        print(result)
         return json.dumps(result)
-        
-        
-    def get_city_list(self):## all cities
-        sql = "SELECT `city_id`, `name`, `country` FROM `city`"
-        print(self.get_all(sql))
-    
-    def get_orders_by_agency(self, agency_id, city_id):
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
-            sql = "SELECT * FROM orders WHERE agency_id = %s"
-            cursor.execute(sql, (agency_id))
-            result = cursor.fetchall()
-            if not result:
-                return json.dumps({'status': 'No orders'})
-            if result:
-                return json.dumps(result)
 
-    def get_orders_by_agency_country(self, agency_id, country):
+    # screens by city
+    def get_screens(self, city_id):
+        sql = "SELECT * FROM screen WHERE city_id=%s"
         with self.connection_by_country[country].cursor() as cursor:
-            sql = "SELECT * FROM orders WHERE agency_id = %s"
-            cursor.execute(sql, (agency_id))
-            result = cursor.fetchall()
-            if not result:
-                return json.dumps({'status': 'No orders'})
-            if result:
-                return json.dumps(result)
-            
-    def get_agency(self, agency_name, password, city_id): #essentially a login
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
-            sql = "SELECT * FROM agency WHERE agency_name=%s"
-            cursor.execute(sql, (agency_name))
-            result = cursor.fetchone()
-            if not result:
-                return json.dumps({'status': 'No such agency'})
-            if result['psw'] != password:
-                return json.dumps({'status': 'Incorrect password'})
-            return json.dumps({'status': 'Success', 'id': result['agency_id']})
-    
-    def get_screens_by_type(self, country, type): 
-        with self.connection_by_country[country].cursor() as cursor:
-            sql = "SELECT* FROM screen WHERE type = %s"
-            cursor.execute(sql, (type))
-            result = cursor.fetchall()
-            if not result:
-                return json.dumps({'status': 'No screens of that type'})  
-            if result:
-                return json.dumps(result)    
+            cursor.execute(sql, (city_id))
+            return json.dumps(cursor.fetchall())
 
+    # get all screens in a country
     def get_screens_by_country(self, country):
          with self.connection_by_country[country].cursor() as cursor:
              sql = "SElECT * FROM screen"
              cursor.execute(sql)
              result = cursor.fetchall()
              if not result:
-                 return json.dumps({'status': 'No screens'})  
+                 return ('', 404) # no screens found
              if result:
                  return json.dumps(result)
 
+    # get screens by type in a country
+    def get_screens_by_type(self, country, type): 
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT* FROM screen WHERE type = %s"
+            cursor.execute(sql, (type))
+            result = cursor.fetchall()
+            if not result:
+                return ('', 404) # no screens found
+            if result:
+                return json.dumps(result)    
+
+    # get list of all cities
+    def get_city_list(self):## all cities
+        sql = "SELECT `city_id`, `name`, `country` FROM `city`"
+        return self.__get_all(sql)
+    
+    # get orders for an agency with the city_id
+    def get_orders_by_agency(self, agency_id, city_id):
+        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
+            sql = "SELECT * FROM orders WHERE agency_id = %s"
+            cursor.execute(sql, (agency_id))
+            result = cursor.fetchall()
+            if not result:
+                return ('', 404) # no orders found
+            if result:
+                return json.dumps(result)
+
+    # get orders for a agency with the country_code
+    def get_orders_by_agency_country(self, agency_id, country):
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT * FROM orders WHERE agency_id = %s"
+            cursor.execute(sql, (agency_id))
+            result = cursor.fetchall()
+            if not result:
+                return ('', 404) # no orders found
+            if result:
+                return json.dumps(result)
+    
