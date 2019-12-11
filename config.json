@@ -1,28 +1,26 @@
 [
     {
         "host": "localhost",
-        "user": "luumu",
-        "password": "123",
+        "user": "doohAdmin",
+        "password": "dooh",
         "db": "diss1",
         "location": "FI",
         "id": 1
     },
     {
         "host": "localhost",
-        "user": "luumu",
-        "password": "123",
+        "user": "doohAdmin",
+        "password": "dooh",
         "db": "diss2",
         "location": "FRA",
         "id": 2
-        
     },
     {
         "host": "localhost",
-        "user": "luumu",
-        "password": "123",
+        "user": "doohAdmin",
+        "password": "dooh",
         "db": "diss3",
         "location": "SPA",
         "id": 3
-        
     }
 ]
