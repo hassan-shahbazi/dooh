@@ -8,7 +8,6 @@ class DatabaseManager:
         
         self.connections = []
         self.connection_by_country = {}
-        self.connection_by_city_id = {}
         
         for connection_config in self.config:
             connection = pymysql.connect(host=connection_config['host'],
@@ -21,7 +20,6 @@ class DatabaseManager:
             self.connections.append(connection)
             
             self.connection_by_country[connection_config['location']] = connection
-            self.connection_by_city_id[connection_config['id']] = connection
 
 ## Private functions
     def __update_all(self, sql, *args): ## update to all db's
@@ -35,7 +33,18 @@ class DatabaseManager:
                 cursor.execute(sql)
                 return json.dumps(cursor.fetchall())
 
-    def __update_screenorder(self, country, screen_id, order_id):
+    def update_agency(self, agency_name, location, psw):## register
+        sql = "INSERT INTO agency(agency_name, location, psw) VALUES (%s, %s, %s)"
+        self.update_all(sql, agency_name, location, psw) ### update all, since it's fully replicated
+        
+    def update_payment(self, country, amount, status): ## this is useless
+        sql_insert = "INSERT INTO payment (amount, status) VALUES (%s, %s)"
+        with self.connection_by_country[country].cursor() as cursor:
+            cursor.execute(sql_insert, (amount, 'paid'))
+            payment_id = cursor.lastrowid
+            return payment_id 
+
+    def update_screenorder(self, country, screen_id, order_id):
         sql_insert3 = "INSERT INTO screenorder (screen_id, order_id) VALUES (%s, %s)"
         with self.connection_by_country[country].cursor() as cursor:
             cursor.execute(sql_insert3,(screen_id, order_id))
@@ -116,18 +125,7 @@ class DatabaseManager:
     # get list of all cities
     def get_city_list(self):## all cities
         sql = "SELECT `city_id`, `name`, `country` FROM `city`"
-        return self.__get_all(sql)
-    
-    # get orders for an agency with the city_id
-    def get_orders_by_agency(self, agency_id, city_id):
-        with self.connection_by_city_id[int(city_id)].cursor() as cursor:
-            sql = "SELECT * FROM orders WHERE agency_id = %s"
-            cursor.execute(sql, (agency_id))
-            result = cursor.fetchall()
-            if not result:
-                return ('', 404) # no orders found
-            if result:
-                return json.dumps(result)
+        print(self.get_all(sql))
 
     # get orders for a agency with the country_code
     def get_orders_by_agency_country(self, agency_id, country):
@@ -139,4 +137,34 @@ class DatabaseManager:
                 return ('', 404) # no orders found
             if result:
                 return json.dumps(result)
+            
+    def get_agency(self, agency_name, password, country): #essentially a login
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT * FROM agency WHERE agency_name=%s"
+            cursor.execute(sql, (agency_name))
+            result = cursor.fetchone()
+            if not result:
+                return json.dumps({'status': 'No such agency'})
+            if result['psw'] != password:
+                return json.dumps({'status': 'Incorrect password'})
+            return json.dumps({'status': 'Success', 'id': result['agency_id']})
     
+    def get_screens_by_type(self, country, type): 
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT* FROM screen WHERE type = %s"
+            cursor.execute(sql, (type))
+            result = cursor.fetchall()
+            if not result:
+                return json.dumps({'status': 'No screens of that type'})  
+            if result:
+                return json.dumps(result)    
+
+    def get_screens_by_country(self, country):
+         with self.connection_by_country[country].cursor() as cursor:
+             sql = "SElECT * FROM screen"
+             cursor.execute(sql)
+             result = cursor.fetchall()
+             if not result:
+                 return json.dumps({'status': 'No screens'})  
+             if result:
+                 return json.dumps(result)

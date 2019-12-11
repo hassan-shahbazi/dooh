@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `diss3`.`agency` (
   `psw` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`agency_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 3
+AUTO_INCREMENT = 5
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `diss3`.`city` (
   `country` ENUM('FI', 'FRA', 'SPA') NOT NULL,
   PRIMARY KEY (`city_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 3
+AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -55,18 +55,18 @@ CREATE TABLE IF NOT EXISTS `diss3`.`orders` (
   `order_id` INT(11) NOT NULL AUTO_INCREMENT,
   `duration` DOUBLE NOT NULL,
   `number_of_repeat` INT(11) NOT NULL,
-  `city_id` INT NOT NULL,
+  `city_id` INT(11) NOT NULL,
   `screen_type` ENUM('billboard', 'standing', 'small') NOT NULL,
   `amount` DOUBLE NOT NULL,
   `agency_id` INT(11) NOT NULL,
   PRIMARY KEY (`order_id`),
-  INDEX `agency_idx` (`agency_id` ASC) VISIBLE,
+  INDEX `agency_idx` (`agency_id` ASC),
   CONSTRAINT `agency`
     FOREIGN KEY (`agency_id`)
     REFERENCES `diss3`.`agency` (`agency_id`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 11
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `diss3`.`screen` (
     REFERENCES `diss3`.`city` (`city_id`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 4
+AUTO_INCREMENT = 6
 DEFAULT CHARACTER SET = latin1;
 
 
