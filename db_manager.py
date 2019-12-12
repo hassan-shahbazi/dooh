@@ -23,11 +23,13 @@ class DatabaseManager:
 
     def __update_all(self, sql, *args): ## update to all db's
         for connection in self.connections:
+            connection.ping(True)
             with connection.cursor() as cursor:
                 cursor.execute(sql, tuple(args))
 
     def __get_all(self, sql): ## gets from all db's
         for connection in self.connections:
+            connection.ping(True)
             with connection.cursor() as cursor:
                 cursor.execute(sql)
                 return json.dumps(cursor.fetchall())
@@ -35,11 +37,13 @@ class DatabaseManager:
     def __update_screenorder(self, country, screen_id, order_id):
         sql_insert3 = "INSERT INTO screenorder (screen_id, order_id) VALUES (%s, %s)"
         with self.connection_by_country[country].cursor() as cursor:
+            connection.ping(True)
             cursor.execute(sql_insert3,(screen_id, order_id))
             
     def __update_order(self, country, duration, number_of_repeat, amount,agency_id, screen_type, city_id):
         sql_insert2 = "INSERT INTO orders(duration, number_of_repeat, amount, agency_id, screen_type, city_id) VALUES (%s,%s,%s,%s,%s,%s)"
         with self.connection_by_country[country].cursor() as cursor:
+            connection.ping(True)
             cursor.execute(sql_insert2,(duration, number_of_repeat, amount, agency_id, screen_type, city_id))
             order_id = cursor.lastrowid
             return order_id ## must return this to insert into screenorders (foreign key constraint)
@@ -52,6 +56,7 @@ class DatabaseManager:
     def get_agency(self, agency_name, password, country): # login
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM agency WHERE agency_name=%s"
+            connection.ping(True)
             cursor.execute(sql, (agency_name))
             result = cursor.fetchone()
             if not result:
@@ -72,6 +77,7 @@ class DatabaseManager:
     def get_orders_by_agency_country(self, agency_id, country):
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM orders WHERE agency_id = %s"
+            connection.ping(True)
             cursor.execute(sql, (agency_id))
             result = cursor.fetchall()
             if not result:
@@ -84,6 +90,7 @@ class DatabaseManager:
         sql = "SELECT * FROM screen"
         result = []
         for conn in self.connections:
+            connection.ping(True)
             with conn.cursor() as cursor:
                 cursor.execute(sql)
                 result += cursor.fetchall()
@@ -102,6 +109,7 @@ class DatabaseManager:
     def get_screens_by_type(self, country, type): 
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT* FROM screen WHERE type = %s"
+            connection.ping(True)
             cursor.execute(sql, (type))
             result = cursor.fetchall()
             if not result:
