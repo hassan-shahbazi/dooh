@@ -1,11 +1,13 @@
 from flask import Flask, render_template, jsonify, request
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from db_manager import DatabaseManager
 import requests, os, json
 
 # Statics
 app = Flask(__name__)
 CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 db = DatabaseManager()
 
 # Helper functions
@@ -24,6 +26,7 @@ def invalid_screen_type():
 
 # signup a new agency
 @app.route("/sign_up", methods=['POST'])
+@cross_origin()
 def signup():
     username = request.args.get("username", default = None)
     password = request.args.get("password", default = None)
@@ -38,6 +41,7 @@ def signup():
 
 # login to the system
 @app.route("/login", methods=['POST'])
+@cross_origin()
 def login():
     username = request.args.get("username", default = None)
     password = request.args.get("password", default = None)
@@ -51,6 +55,7 @@ def login():
 
 # make a new order
 @app.route("/new_order", methods=['POST'])
+@cross_origin()
 def new_order():
     screen_id = request.args.get("screen_id", default = None)
     country = request.args.get("country_code", default = None)
@@ -72,6 +77,7 @@ def new_order():
 
 # get all screens depending on the passed paramters
 @app.route("/screens", methods=['GET'])
+@cross_origin()
 def screens():
     country = request.args.get("country_code", default = None)
     screen_type = request.args.get("screen_type", default = None)
@@ -88,11 +94,13 @@ def screens():
 
 # get all cities
 @app.route("/cities", methods=['GET'])
+@cross_origin()
 def cities():
     return db.get_city_list()
 
 # get all orders
 @app.route("/orders", methods=['GET'])
+@cross_origin()
 def orders():
     agency = request.args.get("agency_id", default = None)
     country = request.args.get("country_code", default = None)
