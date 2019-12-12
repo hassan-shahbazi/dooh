@@ -97,6 +97,8 @@ def orders():
 
     if agency is None or country is None:
         return null_parameter()
+    if not check_country(country):
+        return invalid_country_code()
     return db.get_orders_by_agency_country(agency, country)
 
 # run the application
