@@ -1,9 +1,11 @@
 from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
 from db_manager import DatabaseManager
 import requests, os, json
 
 # Statics
 app = Flask(__name__)
+CORS(app)
 db = DatabaseManager()
 
 # Helper functions
