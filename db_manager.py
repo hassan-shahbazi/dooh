@@ -67,12 +67,13 @@ class DatabaseManager:
 
 # Orders
     def make_order(self, screen_id, agency_id, duration, number_of_repeat, amount, country, screen_type, city_id):
-        ##Order and screenorder to current db
+        ## Order and screenorder to current db
         order_id = self.__update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
         self.__update_screenorder(country, screen_id, order_id)
 
         ## Orders to finland. The finnish db should have id of 1 
-        order_id =  self.__update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
+        if country is not "FI": ## to prevent duplicated records for FI orders
+            order_id =  self.__update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
 
     def get_orders_by_agency_country(self, agency_id, country):
         self.connection_by_country[country].ping(True)
@@ -86,7 +87,7 @@ class DatabaseManager:
                 return json.dumps(result)
 
 # Screens
-    def get_screens_list(self): # all screens from all databases
+    def get_screens_list(self): ## all screens from all databases
         sql = "SELECT * FROM screen"
         result = []
         for conn in self.connections:
