@@ -60,7 +60,7 @@ class DatabaseManager:
         ##Order and screenorder to current db
         order_id = self.update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
         self.update_screenorder(country, screen_id, order_id)
-
+    
         ## Orders to finland. The finnish db should have id of 1 
         order_id =  self.update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
         
@@ -89,7 +89,17 @@ class DatabaseManager:
                 return json.dumps({'status': 'No orders'})
             if result:
                 return json.dumps(result)
-            
+
+    def get_all_orders(self, country):
+        with self.connection_by_country[country].cursor() as cursor:
+            sql = "SELECT* FROM orders"
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            if not result:
+                return json.dumps({'status':'No orders'})
+            if result:
+                return json.dumps(result)   
+
     def get_agency(self, agency_name, password, country): #essentially a login
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM agency WHERE agency_name=%s"
