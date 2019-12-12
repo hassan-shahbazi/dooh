@@ -1,28 +1,26 @@
 [
     {
-        "host": "localhost",
-        "user": "luumu",
-        "password": "123",
-        "db": "diss1",
+        "host": "eu-cdbr-west-02.cleardb.net",
+        "user": "bea898cc9a1d54",
+        "password": "a83e2d69",
+        "db": "heroku_b410c4ae9618672",
         "location": "FI",
         "id": 1
     },
     {
-        "host": "localhost",
-        "user": "luumu",
-        "password": "123",
-        "db": "diss2",
+        "host": "eu-cdbr-west-02.cleardb.net",
+        "user": "bf6fb1d675db4b",
+        "password": "61053f1d",
+        "db": "heroku_5d38d33f426ba9e",
         "location": "FRA",
         "id": 2
-        
     },
     {
-        "host": "localhost",
-        "user": "luumu",
-        "password": "123",
-        "db": "diss3",
+        "host": "eu-cdbr-west-02.cleardb.net",
+        "user": "b39dfa25cb72e3",
+        "password": "0ec8f1c5",
+        "db": "heroku_59c170fe8e54df9",
         "location": "SPA",
         "id": 3
-        
     }
 ]
