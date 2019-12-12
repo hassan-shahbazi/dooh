@@ -121,5 +121,3 @@ class DatabaseManager:
              if result:
                  return json.dumps(result)
 
-db = DatabaseManager()
-print(db.get_agency('Agency_1','123','FI'))
