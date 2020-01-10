@@ -111,6 +111,18 @@ def orders():
         return invalid_country_code()
     return db.get_orders_by_agency_country(agency, country)
 
+# get reports
+@app.route("/reports", methods=['GET'])
+def reports():
+    duration = request.args.get("duration", default = None)
+    location = request.args.get("location", default = None)
+
+    if duration is not None:
+        return db.get_report_agencies(duration)
+    if location is not None:
+        return db.get_report_number_of(location)
+    return null_parameter()
+
 # run the application
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))

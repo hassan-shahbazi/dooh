@@ -127,22 +127,22 @@ class DatabaseManager:
 # Report thingy
     def get_report_agencies(self, duration): ##by dutartion
         self.connection_by_country['FI'].ping(True)
-                with self.connection_by_country['FI'].cursor() as cursor:
-                    sql = "SELECT agency.agency_id, agency_name, location, SUM(duration) FROM agency INNER JOIN orders ON agency.agency_id = orders.agency_id AND duration > %s GROUP BY agency_name;"
-                    cursor.execute(sql, (duration))
-                    result = cursor.fetcall()
-                    if not result:
-                        return ('', 404) # no results
-                    if result:
-                        return json.dumps(result)
+        with self.connection_by_country['FI'].cursor() as cursor:
+            sql = "SELECT agency.agency_id, agency_name, location, SUM(duration) FROM agency INNER JOIN orders ON agency.agency_id = orders.agency_id AND duration > %s GROUP BY agency_name;"
+            cursor.execute(sql, (duration))
+            result = cursor.fetchall()
+            if not result:
+                return ('', 404) # no results
+            return json.dumps(result)
+                    
                         
     def get_report_number_of(self, location):## by location
         self.connection_by_country['FI'].ping(True)
-                with self.connection_by_country['FI'].cursor() as cursor:
-                    sql = "SELECT agency.agency_id, agency_name, location, COUNT(*) FROM orders INNER JOIN agency ON orders.agency_id = agency.agency_id AND agency.location = %s GROUP BY agency_id;"
-                    cursor.execute(sql, (location))
-                    result = cursor.fetcall()
-                    if not result:
-                        return ('', 404) # no results
-                    if result:
-                        return json.dumps(result)
+        with self.connection_by_country['FI'].cursor() as cursor:
+            sql = "SELECT agency.agency_id, agency_name, location, COUNT(*) FROM orders INNER JOIN agency ON orders.agency_id = agency.agency_id AND agency.location = %s GROUP BY agency_id;"
+            cursor.execute(sql, (location))
+            result = cursor.fetchall()
+            if not result:
+                return ('', 404) # no results
+            return json.dumps(result)
+                    
