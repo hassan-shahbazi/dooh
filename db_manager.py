@@ -119,4 +119,4 @@ class DatabaseManager:
              if not result:
                  return json.dumps({'status': 'No screens'})  
              if result:
-                 return json.dumps(result)
+                 return json.dumps(result) ##result
