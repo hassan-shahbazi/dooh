@@ -125,7 +125,7 @@ class DatabaseManager:
         return self.__get_all(sql)
 
 # Report thingy
-    def get_report_agencies(self, duration): ##by dutartion
+    def get_report_agencies(self, duration): ##by duration
         self.connection_by_country['FI'].ping(True)
         with self.connection_by_country['FI'].cursor() as cursor:
             sql = "SELECT agency.agency_id, agency_name, location, SUM(duration) AS sum FROM agency INNER JOIN orders ON agency.agency_id = orders.agency_id AND duration > %s GROUP BY agency_name;"
@@ -139,7 +139,7 @@ class DatabaseManager:
     def get_report_number_of(self, location):## by location
         self.connection_by_country['FI'].ping(True)
         with self.connection_by_country['FI'].cursor() as cursor:
-            sql = "SELECT agency.agency_id, agency_name, location, COUNT(*) FROM orders INNER JOIN agency ON orders.agency_id = agency.agency_id AND agency.location = %s GROUP BY agency_id;"
+            sql = "SELECT agency.agency_id, agency_name, location, COUNT(*) AS amount FROM orders INNER JOIN agency ON orders.agency_id = agency.agency_id AND agency.location = %s GROUP BY agency_id;"
             cursor.execute(sql, (location))
             result = cursor.fetchall()
             if not result:
