@@ -36,14 +36,14 @@ class DatabaseManager:
 
     def __update_screenorder(self, country, screen_id, order_id):
         sql_insert3 = "INSERT INTO screenorder (screen_id, order_id) VALUES (%s, %s)"
+        self.connection_by_country[country].ping(True)
         with self.connection_by_country[country].cursor() as cursor:
-            connection.ping(True)
             cursor.execute(sql_insert3,(screen_id, order_id))
             
     def __update_order(self, country, duration, number_of_repeat, amount,agency_id, screen_type, city_id):
         sql_insert2 = "INSERT INTO orders(duration, number_of_repeat, amount, agency_id, screen_type, city_id) VALUES (%s,%s,%s,%s,%s,%s)"
+        self.connection_by_country[country].ping(True)
         with self.connection_by_country[country].cursor() as cursor:
-            connection.ping(True)
             cursor.execute(sql_insert2,(duration, number_of_repeat, amount, agency_id, screen_type, city_id))
             order_id = cursor.lastrowid
             return order_id ## must return this to insert into screenorders (foreign key constraint)
@@ -54,9 +54,9 @@ class DatabaseManager:
         self.__update_all(sql, agency_name, location, psw) ### update all, since it's fully replicated
 
     def get_agency(self, agency_name, password, country): # login
+        self.connection_by_country[country].ping(True)
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM agency WHERE agency_name=%s"
-            connection.ping(True)
             cursor.execute(sql, (agency_name))
             result = cursor.fetchone()
             if not result:
@@ -67,17 +67,18 @@ class DatabaseManager:
 
 # Orders
     def make_order(self, screen_id, agency_id, duration, number_of_repeat, amount, country, screen_type, city_id):
-        ##Order and screenorder to current db
+        ## Order and screenorder to current db
         order_id = self.__update_order(country, duration, number_of_repeat, amount, agency_id, screen_type, city_id)
         self.__update_screenorder(country, screen_id, order_id)
 
         ## Orders to finland. The finnish db should have id of 1 
-        order_id =  self.__update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
+        if country is not "FI": ## to prevent duplicated records for FI orders
+            order_id =  self.__update_order('FI', duration, number_of_repeat, amount, agency_id, screen_type, city_id)
 
     def get_orders_by_agency_country(self, agency_id, country):
+        self.connection_by_country[country].ping(True)
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT * FROM orders WHERE agency_id = %s"
-            connection.ping(True)
             cursor.execute(sql, (agency_id))
             result = cursor.fetchall()
             if not result:
@@ -86,18 +87,19 @@ class DatabaseManager:
                 return json.dumps(result)
 
 # Screens
-    def get_screens_list(self): # all screens from all databases
+    def get_screens_list(self): ## all screens from all databases
         sql = "SELECT * FROM screen"
         result = []
         for conn in self.connections:
-            connection.ping(True)
+            conn.ping(True)
             with conn.cursor() as cursor:
                 cursor.execute(sql)
                 result += cursor.fetchall()
         return json.dumps(result)
 
     def get_screens_by_country(self, country):
-         with self.connection_by_country[country].cursor() as cursor:
+        self.connection_by_country[country].ping(True)
+        with self.connection_by_country[country].cursor() as cursor:
              sql = "SElECT * FROM screen"
              cursor.execute(sql)
              result = cursor.fetchall()
@@ -107,9 +109,9 @@ class DatabaseManager:
                  return json.dumps(result)
 
     def get_screens_by_type(self, country, type): 
+        self.connection_by_country[country].ping(True)
         with self.connection_by_country[country].cursor() as cursor:
             sql = "SELECT* FROM screen WHERE type = %s"
-            connection.ping(True)
             cursor.execute(sql, (type))
             result = cursor.fetchall()
             if not result:
